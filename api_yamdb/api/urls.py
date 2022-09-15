@@ -21,7 +21,7 @@ router.register('categories', CategoryViewSet, basename='categories')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
-    basename='reviews'
+    basename='reviews')
 
 urlpatterns = [
     path('v1/auth/token', TokenObtainPairView.as_view(), name='token'),
