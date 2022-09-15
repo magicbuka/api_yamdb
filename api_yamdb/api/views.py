@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Comments, Review
 from .permissions import OwnerOrReadOnly
@@ -17,11 +18,13 @@ class UsersViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (OwnerOrReadOnly,)
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        post_id = self.kwargs.get("post")
-        get_object_or_404(Review, id=post_id)
-        new_queryset = Comments.objects.filter(post=post_id)
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        get_object_or_404(Review, review_id=review_id, )
+        new_queryset = Comments.objects.filter(review_id=review_id)
         return new_queryset
 
     def perform_create(self, serializer):

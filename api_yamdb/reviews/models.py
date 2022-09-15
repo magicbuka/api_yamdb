@@ -28,7 +28,15 @@ class Review(models.Model):
 
 
 class Comments(models.Model):
-    review_id = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='Comments')
+    review_id = models.ForeignKey(Review,
+                                  on_delete=models.CASCADE,
+                                  related_name='Comments'
+                                  )
     text = models.TextField(max_length=500, blank=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Comments')
-    pub_date = models.DateTimeField('Дата добавления', auto_now_add=True, db_index=True)
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='Comments'
+                               )
+    pub_date = models.DateTimeField('Дата добавления',
+                                    auto_now_add=True,
+                                    )

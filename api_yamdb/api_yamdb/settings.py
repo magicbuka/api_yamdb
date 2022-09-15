@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'djoser',
+    'rest_framework_simplejwt',
     'api',
     'reviews',
 ]
@@ -102,3 +102,6 @@ DJOSER = {
         # 'user': 'user_profile.serializer.UserSerializer'
     }
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
