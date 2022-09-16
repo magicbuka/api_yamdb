@@ -1,5 +1,4 @@
-from djoser.serializers import UserCreateSerializer
-from .validators import NoMeUsername
+from .validators import NoMeUsername, ChekCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
@@ -11,8 +10,27 @@ MORE_THAN_ONE_REVIEW = 'Превышено допустимое количест
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
+        fields = ('email', 'username')
         model = User
+        validators = [
+            NoMeUsername(
+                fields=('username',),
+                message='Недопустимое имя пользователя!'
+            ),
+        ]
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=30)
+    confirmation_code = serializers.CharField(max_length=6)
+
+    class Meta:
+        validators = [
+            ChekCode(
+                fields=('username',),
+                message='Неправильный код!'
+            ),
+        ]
 
 
 class CommentsSerializer(serializers.ModelSerializer):
@@ -26,8 +44,8 @@ class CommentsSerializer(serializers.ModelSerializer):
         model = Comments
 
 
-class UserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
         model = User
         fields = (
             'email',
@@ -57,6 +75,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer()
     rating = serializers.SerializerMethodField('get_rating')
+
     class Meta:
         model = Title
         fields = '__all__'

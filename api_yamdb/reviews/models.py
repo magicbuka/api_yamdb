@@ -1,4 +1,5 @@
 from django.db import models
+import random, string
 from django.contrib.auth.models import AbstractUser
 
 
@@ -17,8 +18,12 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     is_superuser = models.BooleanField(default=False)
+    confirmation_code = models.CharField(max_length=6)
 
     USERNAME_FIELD = 'username'
+
+    def generate_activation_code(self):
+        self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
 
 
 class Category(models.Model):

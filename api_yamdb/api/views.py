@@ -3,16 +3,57 @@ from .permissions import OwnerOrReadOnly
 from .serializers import CommentsSerializer, UserSerializer
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework import filters, permissions, viewsets, mixins
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
 from .permissions import IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly
 from .serializers import (
-    CategorySerializer, GenreSerializer, ReviewSerializer,
-    TitleWriteSerializer, TitleReadSerializer
+    CreateUserSerializer, TokenSerializer, CategorySerializer, GenreSerializer, ReviewSerializer,
+    TitleWriteSerializer, TitleReadSerializer,
 )
+from django.core.mail import send_mail
+from rest_framework import status
+from rest_framework.response import Response
 from reviews.models import Category, Genre, Title, Comments, Review, User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = CreateUserSerializer
+    permission_classes = (AllowAny,)
+    http_method_names = ['post']
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.generate_activation_code()
+        user.save()
+        send_mail(
+            'Activate Your Account',
+            f'Here is the activation code: {user.confirmation_code}',
+            'admin@yamdb.fake',
+            [user.email]
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def token_view(request):
+    serializer = TokenSerializer(data=request.data)
+    if serializer.is_valid():
+        user = User.objects.get(username=serializer.data['username'])
+        token = RefreshToken.for_user(user)
+        print(token)
+        return Response(token)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
