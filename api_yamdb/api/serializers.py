@@ -1,5 +1,5 @@
 from djoser.serializers import UserCreateSerializer
-from .validators import NoMeUsernaem
+from .validators import NoMeUsername
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
@@ -34,7 +34,7 @@ class UserCreateSerializer(UserCreateSerializer):
             'username',
         )
         validators = [
-           NoMeUsernaem(
+           NoMeUsername(
                 fields=('username',),
                 message='Недопустимое имя пользователя!'
             ),

@@ -1,8 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import PermissionsMixin
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import get_user_model
 
 
 CHOICES = (
@@ -150,22 +147,21 @@ class Review(models.Model):
 
 
 class Comments(models.Model):
-    review_id = models.ForeignKey(Review,
-                                  on_delete=models.CASCADE,
-                                  related_name='Comments'
-                                  )
+    review_id = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='Comments'
+        )
     text = models.TextField(max_length=500, blank=True)
-    author = models.ForeignKey(User,
-                               on_delete=models.CASCADE,
-                               related_name='Comments'
-                               )
-    pub_date = models.DateTimeField('Дата добавления',
-                                    auto_now_add=True,
-                                    )
-
-
-
-
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='Comments'
+        )
+    pub_date = models.DateTimeField(
+        'Дата добавления',
+        auto_now_add=True,
+        )
 
 
 class GenreTitle(models.Model):
@@ -173,12 +169,12 @@ class GenreTitle(models.Model):
         Genre,
         on_delete=models.CASCADE,
         verbose_name='Жанр',
-    )
+        )
     title = models.ForeignKey(
         Title, 
         on_delete=models.CASCADE,
         verbose_name='Произведение',
-    )
+        )
 
     def __str__(self):
         return f'{self.genre} {self.title}'

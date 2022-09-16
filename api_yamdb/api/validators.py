@@ -1,7 +1,7 @@
 from rest_framework.exceptions import ValidationError
 
 
-class NoMeUsernaem:
+class NoMeUsername:
     def __init__(self, fields, message=None):
         self.fields = fields
         self.message = message
