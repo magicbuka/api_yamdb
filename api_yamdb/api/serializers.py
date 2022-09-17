@@ -8,12 +8,15 @@ from reviews.models import Category, Genre, Review, Title, Comments, User
 MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('email', 'username')
         model = User
+        fields = (
+            'email',
+            'username',
+        )
         validators = [
-            NoMeUsername(
+           NoMeUsername(
                 fields=('username',),
                 message='Недопустимое имя пользователя!'
             ),
@@ -33,6 +36,15 @@ class TokenSerializer(serializers.Serializer):
         ]
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role'
+                  )
+        optional_fields = ['first_name', 'last_name', 'bio', 'role']
+
+
 class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
@@ -42,21 +54,6 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comments
-
-
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'username',
-        )
-        validators = [
-           NoMeUsername(
-                fields=('username',),
-                message='Недопустимое имя пользователя!'
-            ),
-        ]
 
 
 class CategorySerializer(serializers.ModelSerializer):

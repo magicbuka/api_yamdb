@@ -4,16 +4,16 @@ from django.contrib.auth.models import AbstractUser
 
 
 CHOICES = (
-    ('u', 'user'),
-    ('m', 'moderator'),
-    ('a', 'admin'),
+    ('user', 'user'),
+    ('moderator', 'moderator'),
+    ('admin', 'admin'),
 )
 
 
 class User(AbstractUser):
     username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=1, choices=CHOICES, default='u')
+    role = models.CharField(max_length=10, choices=CHOICES, default='user')
     bio = models.TextField(max_length=500, blank=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)

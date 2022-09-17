@@ -7,11 +7,11 @@ from rest_framework import filters, permissions, viewsets, mixins
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
-from .permissions import IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly
+from .permissions import IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly, IsAdmin
 from .serializers import (
-    CreateUserSerializer, TokenSerializer, CategorySerializer, GenreSerializer, ReviewSerializer,
-    TitleWriteSerializer, TitleReadSerializer,
-)
+    CreateUserSerializer, TokenSerializer, CategorySerializer, GenreSerializer,
+    ReviewSerializer, TitleWriteSerializer, TitleReadSerializer,
+    )
 from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
@@ -41,7 +41,10 @@ class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK,
+                        headers=headers
+                        )
 
 
 @api_view(['POST'])
@@ -58,7 +61,13 @@ def token_view(request):
 
 class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = (OwnerOrReadOnly,)
+    permission_classes = (IsAdmin,)
+    #permission_classes = (AllowAny,)
+    queryset = User.objects.all()
+    pagination_class = LimitOffsetPagination
+    lookup_field = 'username'
+
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):
