@@ -14,12 +14,12 @@ class NoMeUsername:
             raise ValidationError(self.message, code='unique')
 
 
-class ChekCode:
+class ChekUserCode:
     def __init__(self, fields, message=None):
         self.fields = fields
         self.message = message
 
     def __call__(self, attrs, *args, **kwargs):
-        user = User.objects.get(username=attrs['username'])
+        user = get_object_or_404(User, username=attrs['username'])
         if user.confirmation_code != attrs['confirmation_code']:
             raise ValidationError(self.message, code='unique')

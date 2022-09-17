@@ -1,4 +1,4 @@
-from .validators import NoMeUsername, ChekCode
+from .validators import NoMeUsername, ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
@@ -26,7 +26,7 @@ class TokenSerializer(serializers.Serializer):
 
     class Meta:
         validators = [
-            ChekCode(
+            ChekUserCode(
                 fields=('username',),
                 message='Неправильный код!'
             ),

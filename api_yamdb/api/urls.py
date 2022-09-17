@@ -9,7 +9,6 @@ app_name = 'api'
 
 router = DefaultRouter()
 router.register('auth/signup', CreateUserViewSet, basename='signup')
-#router.register('auth/token', TokenViewSet, basename='token')
 router.register('users', UsersViewSet, basename='users')
 router.register('titles', TitleViewSet, basename='titles')
 router.register('genres', GenreViewSet, basename='genres')

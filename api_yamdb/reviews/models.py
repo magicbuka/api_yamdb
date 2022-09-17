@@ -18,7 +18,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     is_superuser = models.BooleanField(default=False)
-    confirmation_code = models.CharField(max_length=6)
+    confirmation_code = models.CharField(max_length=6, blank=True)
 
     USERNAME_FIELD = 'username'
 
