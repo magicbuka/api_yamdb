@@ -1,30 +1,33 @@
 import json
 
-from rest_framework.pagination import LimitOffsetPagination
-from .permissions import OwnerOrReadOnly
-from .serializers import CommentsSerializer, UserSerializer
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets, mixins
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
-    )
+from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
-from .permissions import IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly, IsAdmin
-from .serializers import (
-    CreateUserSerializer, CategorySerializer, GenreSerializer, MeSerializer,
-    ReviewSerializer, TitleWriteSerializer, TitleReadSerializer, TokenSerializer
-    )
-from django.core.mail import send_mail
-from rest_framework import status
-from rest_framework.response import Response
-from reviews.models import Category, Genre, Title, Comments, Review, User
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import (IsAdmin, IsAdminAuthorModeratorOrReadOnly,
+                          IsAdminOrReadOnly, OwnerOrReadOnly)
+from .serializers import (CategorySerializer, CommentsSerializer,
+                          CreateUserSerializer, GenreSerializer, MeSerializer,
+                          ReviewSerializer, TitleReadSerializer,
+                          TitleWriteSerializer, TokenSerializer,
+                          UserSerializer)
+
+from reviews.models import Category, Comments, Genre, Review, Title, User
 
 
 class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """
+    Проверка почты и имени пользователя, отправка email с кодом подтверждения
+    """
     serializer_class = CreateUserSerializer
     permission_classes = (AllowAny,)
     http_method_names = ['post']
@@ -52,8 +55,11 @@ class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdmin])
+@permission_classes([AllowAny])
 def token_view(request):
+    """
+    Проверка имени пользователя и кода подтверждения, генерация токена
+    """
     serializer = TokenSerializer(data=request.data)
     if serializer.is_valid():
         user = User.objects.get(username=serializer.data['username'])
@@ -64,6 +70,9 @@ def token_view(request):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """
+    Работа администратора с пользователями
+    """
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
     queryset = User.objects.all()
@@ -74,6 +83,9 @@ class UsersViewSet(viewsets.ModelViewSet):
 @api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me_view(request):
+    """
+    Редактирование собственной учетной записи
+    """
     if request.method == 'GET':
         serializer = MeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -85,6 +97,9 @@ def me_view(request):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Комментарии к отзывам
+    """
     serializer_class = CommentsSerializer
     permission_classes = (OwnerOrReadOnly,)
     pagination_class = LimitOffsetPagination

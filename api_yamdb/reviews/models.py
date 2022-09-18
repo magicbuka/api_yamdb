@@ -1,7 +1,8 @@
-from django.db import models
-import random, string
-from django.contrib.auth.models import AbstractUser
+import random
+import string
 
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 CHOICES = (
     ('user', 'user'),

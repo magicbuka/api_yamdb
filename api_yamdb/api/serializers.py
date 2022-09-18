@@ -1,16 +1,18 @@
-from .validators import NoMeUsername, ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
-from reviews.models import Category, Genre, Review, Title, Comments, User
 
-from djoser.serializers import UserSerializer
+from .validators import ChekUserCode, NoMeUsername
 
+from reviews.models import Category, Comments, Genre, Review, Title, User
 
 MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    """
+    Создание нового пользователя
+    """
     class Meta:
         model = User
         fields = (
@@ -26,6 +28,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
+    """
+    Проверка кода подтверждения по имени пользователя
+    """
     username = serializers.CharField(max_length=30)
     confirmation_code = serializers.CharField(max_length=6)
 
@@ -39,21 +44,29 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Работа Администратора с пользователями
+    """
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role'
                   )
         optional_fields = ('first_name', 'last_name', 'bio', 'role')
-        #read_only_fields = ('role',)
 
 
 class MeSerializer(UserSerializer):
+    """
+    Работа с собственной учетной записью
+    """
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
 class CommentsSerializer(serializers.ModelSerializer):
+    """
+    Комментарии к отзывам
+    """
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
