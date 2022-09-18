@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'api',
     'reviews',
+    'djoser'
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'PAGE_SIZE': 5,
 }
 
 SIMPLE_JWT = {
@@ -92,14 +94,13 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-AUTH_USER_MODEL = 'reviews.User'
+# DJOSER = {
+#     'SERIALIZERS': {
+#          'user': 'api.serializers.TokenSerializer'
+#     }
+# }
 
-DJOSER = {
-    'SERIALIZERS': {
-        'user_create': 'api.serializers.UserCreateSerializer',
-        # 'user': 'user_profile.serializer.UserSerializer'
-    }
-}
+AUTH_USER_MODEL = 'reviews.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')

@@ -1,18 +1,56 @@
-from djoser.serializers import UserCreateSerializer
-from .validators import NoMeUsernaem
+from .validators import NoMeUsername, ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
 from reviews.models import Category, Genre, Review, Title, Comments, User
 
+from djoser.serializers import UserSerializer
+
 
 MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
 
 
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'username',
+        )
+        validators = [
+           NoMeUsername(
+                fields=('username',),
+                message='Недопустимое имя пользователя!'
+            ),
+        ]
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=30)
+    confirmation_code = serializers.CharField(max_length=6)
+
+    class Meta:
+        validators = [
+            ChekUserCode(
+                fields=('username',),
+                message='Неправильный код!'
+            ),
+        ]
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = '__all__'
         model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role'
+                  )
+        optional_fields = ('first_name', 'last_name', 'bio', 'role')
+        #read_only_fields = ('role',)
+
+
+class MeSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CommentsSerializer(serializers.ModelSerializer):
@@ -24,21 +62,6 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comments
-
-
-class UserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = (
-            'email',
-            'username',
-        )
-        validators = [
-           NoMeUsernaem(
-                fields=('username',),
-                message='Недопустимое имя пользователя!'
-            ),
-        ]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,6 +80,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer()
     rating = serializers.SerializerMethodField('get_rating')
+
     class Meta:
         model = Title
         fields = '__all__'

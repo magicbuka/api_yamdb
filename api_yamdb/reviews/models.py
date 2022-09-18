@@ -1,27 +1,30 @@
 from django.db import models
+import random, string
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import PermissionsMixin
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import get_user_model
 
 
 CHOICES = (
-    ('u', 'user'),
-    ('m', 'moderator'),
-    ('a', 'admin'),
+    ('user', 'user'),
+    ('moderator', 'moderator'),
+    ('admin', 'admin'),
 )
 
 
 class User(AbstractUser):
     username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=1, choices=CHOICES, default='u')
+    role = models.CharField(max_length=10, choices=CHOICES, default='user')
     bio = models.TextField(max_length=500, blank=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     is_superuser = models.BooleanField(default=False)
+    confirmation_code = models.CharField(max_length=6, blank=True)
 
     USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
+
+    def generate_activation_code(self):
+        self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
 
 
 class Category(models.Model):
@@ -150,22 +153,21 @@ class Review(models.Model):
 
 
 class Comments(models.Model):
-    review_id = models.ForeignKey(Review,
-                                  on_delete=models.CASCADE,
-                                  related_name='Comments'
-                                  )
+    review_id = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='Comments'
+        )
     text = models.TextField(max_length=500, blank=True)
-    author = models.ForeignKey(User,
-                               on_delete=models.CASCADE,
-                               related_name='Comments'
-                               )
-    pub_date = models.DateTimeField('Дата добавления',
-                                    auto_now_add=True,
-                                    )
-
-
-
-
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='Comments'
+        )
+    pub_date = models.DateTimeField(
+        'Дата добавления',
+        auto_now_add=True,
+        )
 
 
 class GenreTitle(models.Model):
@@ -173,12 +175,12 @@ class GenreTitle(models.Model):
         Genre,
         on_delete=models.CASCADE,
         verbose_name='Жанр',
-    )
+        )
     title = models.ForeignKey(
         Title, 
         on_delete=models.CASCADE,
         verbose_name='Произведение',
-    )
+        )
 
     def __str__(self):
         return f'{self.genre} {self.title}'
