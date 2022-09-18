@@ -19,12 +19,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'email',
             'username',
         )
-        validators = [
-           NoMeUsername(
-                fields=('username',),
-                message='Недопустимое имя пользователя!'
-            ),
-        ]
+        validators = [NoMeUsername(fields=('username',),
+                                   message='Недопустимое имя пользователя!'
+                                   ),
+                      ]
 
 
 class TokenSerializer(serializers.Serializer):

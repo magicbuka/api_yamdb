@@ -25,7 +25,10 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def generate_activation_code(self):
-        self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        self.confirmation_code = ''.join(random.choice(string.ascii_uppercase
+                                                       + string.digits)
+                                         for x in range(6)
+                                         )
 
 
 class Category(models.Model):
@@ -154,34 +157,27 @@ class Review(models.Model):
 
 
 class Comments(models.Model):
-    review_id = models.ForeignKey(
-        Review,
-        on_delete=models.CASCADE,
-        related_name='Comments'
-        )
+    review_id = models.ForeignKey(Review,
+                                  on_delete=models.CASCADE,
+                                  related_name='Comments'
+                                  )
     text = models.TextField(max_length=500, blank=True)
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='Comments'
-        )
-    pub_date = models.DateTimeField(
-        'Дата добавления',
-        auto_now_add=True,
-        )
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='Comments'
+                               )
+    pub_date = models.DateTimeField('Дата добавления', auto_now_add=True)
 
 
 class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name='Жанр',
-        )
-    title = models.ForeignKey(
-        Title, 
-        on_delete=models.CASCADE,
-        verbose_name='Произведение',
-        )
+    genre = models.ForeignKey(Genre,
+                              on_delete=models.CASCADE,
+                              verbose_name='Жанр',
+                              )
+    title = models.ForeignKey(Title,
+                              on_delete=models.CASCADE,
+                              verbose_name='Произведение',
+                              )
 
     def __str__(self):
         return f'{self.genre} {self.title}'

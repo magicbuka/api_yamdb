@@ -6,4 +6,3 @@ class ReviewsConfig(AppConfig):
     name = 'reviews'
     verbose_name = 'Reviews'
     label = 'reviews'
-
