@@ -21,6 +21,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(max_length=6, blank=True)
 
     USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
 
     def generate_activation_code(self):
         self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))

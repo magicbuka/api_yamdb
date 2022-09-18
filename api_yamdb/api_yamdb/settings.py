@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'api',
     'reviews',
+    'djoser'
 ]
 
 MIDDLEWARE = [
@@ -92,6 +93,12 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# DJOSER = {
+#     'SERIALIZERS': {
+#          'user': 'api.serializers.TokenSerializer'
+#     }
+# }
 
 AUTH_USER_MODEL = 'reviews.User'
 

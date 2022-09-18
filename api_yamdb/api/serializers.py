@@ -4,6 +4,8 @@ from django.db.models import Avg
 from rest_framework import serializers
 from reviews.models import Category, Genre, Review, Title, Comments, User
 
+from djoser.serializers import UserSerializer
+
 
 MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
 
@@ -42,7 +44,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role'
                   )
-        optional_fields = ['first_name', 'last_name', 'bio', 'role']
+        optional_fields = ('first_name', 'last_name', 'bio', 'role')
+        #read_only_fields = ('role',)
+
+
+class MeSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CommentsSerializer(serializers.ModelSerializer):
