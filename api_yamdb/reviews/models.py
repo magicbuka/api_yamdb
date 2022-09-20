@@ -23,6 +23,9 @@ class User(AbstractUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
+    class Meta:
+        ordering = ('username',)
+
     def generate_activation_code(self):
         self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
 
@@ -39,6 +42,7 @@ class Category(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
@@ -58,6 +62,7 @@ class Genre(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -92,13 +97,27 @@ class Title(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name
 
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,
+        verbose_name='Жанр',
+        )
+    title = models.ForeignKey(
+        Title, 
+        on_delete=models.CASCADE,
+        verbose_name='Произведение',
+        )
 
+    def __str__(self):
+        return f'{self.genre} {self.title}'
 class Review(models.Model):
     MESSAGE_FORM = (
         'Произведение: {}, '
@@ -111,7 +130,7 @@ class Review(models.Model):
         Title,
         on_delete=models.CASCADE,
         related_name='reviews',
-        verbose_name='Произведение'
+        verbose_name='Произведение',
     )
     text = models.TextField(
         verbose_name='Отзыв',
@@ -152,35 +171,23 @@ class Review(models.Model):
         )
 
 
-class Comments(models.Model):
-    review_id = models.ForeignKey(
+class Comment(models.Model):
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='Comments'
+        related_name='comments'
         )
     text = models.TextField(max_length=500, blank=True)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='Comments'
+        related_name='comments'
         )
     pub_date = models.DateTimeField(
         'Дата добавления',
         auto_now_add=True,
         )
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.CASCADE,
-        verbose_name='Жанр',
-        )
-    title = models.ForeignKey(
-        Title, 
-        on_delete=models.CASCADE,
-        verbose_name='Произведение',
-        )
-
-    def __str__(self):
-        return f'{self.genre} {self.title}'
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'

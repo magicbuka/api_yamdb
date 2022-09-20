@@ -2,13 +2,14 @@ from .validators import NoMeUsername, ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
-from reviews.models import Category, Genre, Review, Title, Comments, User
+from reviews.models import Category, Genre, Review, Title, Comment, User
 
 from djoser.serializers import UserSerializer
 
 
 MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
-
+WRONG_CODE = 'Неправильный код!'
+WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
 class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,7 +21,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         validators = [
            NoMeUsername(
                 fields=('username',),
-                message='Недопустимое имя пользователя!'
+                message=WRONG_USERNAME
             ),
         ]
 
@@ -33,7 +34,7 @@ class TokenSerializer(serializers.Serializer):
         validators = [
             ChekUserCode(
                 fields=('username',),
-                message='Неправильный код!'
+                message=WRONG_CODE
             ),
         ]
 
@@ -41,27 +42,16 @@ class TokenSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role'
-                  )
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role'
+        )
         optional_fields = ('first_name', 'last_name', 'bio', 'role')
-        #read_only_fields = ('role',)
 
 
 class MeSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
-
-
-class CommentsSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Comments
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -84,7 +74,10 @@ class TitleReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-        read_only_fields = '__all__'
+        read_only_fields = (
+            'id', 'name', 'genre', 'year', 
+            'category', 'description', 'rating'
+        )
 
     def get_rating(self, obj):
         return obj.reviews.aggregate(Avg('score')).get('score__avg')
@@ -117,7 +110,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
+        read_only_fields = ('title',)
         fields = '__all__'
+        
+
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
@@ -127,3 +123,17 @@ class ReviewSerializer(serializers.ModelSerializer):
             ).exists():
                 raise serializers.ValidationError(MORE_THAN_ONE_REVIEW)
         return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        model = Comment
+        read_only_fields = ('review',)
+        fields = '__all__'
+        
+
