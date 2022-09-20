@@ -2,12 +2,13 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    CreateUserViewSet, token_view, me_view,
-    UsersViewSet, CommentViewSet, CategoryViewSet,
-    GenreViewSet, ReviewViewSet, TitleViewSet,
+    CreateUserViewSet,
+    CommentViewSet, CategoryViewSet,
+    GenreViewSet, me_view,
+    ReviewViewSet, TitleViewSet, token_view,
+    UsersViewSet
 )
 
-app_name = 'api'
 
 router_v1 = DefaultRouter()
 router_v1.register('auth/signup', CreateUserViewSet, basename='signup')

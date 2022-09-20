@@ -5,8 +5,10 @@ from rest_framework import serializers
 from reviews.models import Category, Genre, Review, Title, Comment, User
 
 
-MORE_THAN_ONE_REVIEW = ('Превышено допустимое количество отзывов. '
-                        'Разрешен один на одно произведение.')
+MORE_THAN_ONE_REVIEW = (
+    'Превышено допустимое количество отзывов. '
+    'Разрешен один на одно произведение.'
+)
 WRONG_CODE = 'Неправильный код!'
 WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
