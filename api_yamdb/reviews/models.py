@@ -177,7 +177,7 @@ class Review(models.Model):
     #     )
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
