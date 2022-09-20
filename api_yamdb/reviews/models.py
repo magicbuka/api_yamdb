@@ -125,13 +125,13 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    # MESSAGE_FORM = (
-    #     'Произведение: {}, '
-    #     'отзыв: {}, '
-    #     'автор отзыва: {}, '
-    #     'оценка: {}, '
-    #     'дата публикации отзыва: {}.'
-    # )
+    MESSAGE_FORM = (
+        'Произведение: {}, '
+        'отзыв: {}, '
+        'автор отзыва: {}, '
+        'оценка: {}, '
+        'дата публикации отзыва: {}.'
+    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -167,14 +167,14 @@ class Review(models.Model):
             ),
         ]
 
-    # def __str__(self):
-    #     return self.MESSAGE_FORM.format(
-    #         self.title,
-    #         self.text,
-    #         self.author,
-    #         self.score,
-    #         self.pub_date
-    #     )
+    def __str__(self):
+        return self.MESSAGE_FORM.format(
+            self.title,
+            self.text,
+            self.author,
+            self.score,
+            self.pub_date
+        )
 
 
 class Comment(models.Model):
