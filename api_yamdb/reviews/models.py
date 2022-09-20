@@ -104,6 +104,7 @@ class Title(models.Model):
     def __str__(self):
         return self.name
 
+
 class GenreTitle(models.Model):
     genre = models.ForeignKey(
         Genre,
@@ -118,6 +119,8 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{self.genre} {self.title}'
+
+
 class Review(models.Model):
     MESSAGE_FORM = (
         'Произведение: {}, '
@@ -171,7 +174,7 @@ class Review(models.Model):
         )
 
 
-class Comment(models.Model):
+class Comments(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
