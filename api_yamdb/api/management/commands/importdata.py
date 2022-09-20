@@ -58,7 +58,7 @@ class Command(BaseCommand):
                             ('{"', '".join(clean.values())}');"""
                         )
                     except sqlite3.IntegrityError:
-                        self.stdout.write(f'Запись уже существует!')
+                        self.stdout.write('Запись уже существует!')
                     except sqlite3.OperationalError as e:
                         self.stdout.write(
                             f"Ошибка! {e} в строке:\n"
