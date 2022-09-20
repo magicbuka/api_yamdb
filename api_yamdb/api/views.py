@@ -3,9 +3,10 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets, mixins
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
-    )
+from rest_framework.permissions import (IsAuthenticatedOrReadOnly, AllowAny,
+                                        IsAuthenticated
+                                        )
+from rest_framework.pagination import LimitOffsetPagination
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
 from .permissions import (IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly,
