@@ -7,7 +7,9 @@ from .validators import ChekUserCode, NoMeUsername
 
 from reviews.models import Category, Comments, Genre, Review, Title, User
 
-MORE_THAN_ONE_REVIEW = 'Превышено допустимое количество отзывов. Разрешен один на одно произведение.'
+MORE_THAN_ONE_REVIEW = ('Превышено допустимое количество отзывов. '
+                        'Разрешен один на одно произведение.'
+                        )
 WRONG_CODE = 'Неправильный код!'
 WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
@@ -22,12 +24,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'email',
             'username',
         )
-        validators = [
-           NoMeUsername(
-                fields=('username',),
-                message=WRONG_USERNAME
-            ),
-        ]
+        validators = [NoMeUsername(fields=('username',),
+                                   message=WRONG_USERNAME
+                                   ),
+                      ]
 
 
 class TokenSerializer(serializers.Serializer):
@@ -111,16 +111,14 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(), 
-        slug_field='slug', 
-        many=True
-    )
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(), 
-        slug_field='slug'
-    )
-    
+    genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
+                                         slug_field='slug',
+                                         many=True
+                                         )
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
+                                            slug_field='slug'
+                                            )
+
     class Meta:
         model = Title
         fields = '__all__'
@@ -142,9 +140,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
-            if Review.objects.filter(
-                title=self.context['view'].kwargs.get('title_id'), 
-                author=self.context['request'].user
+            if Review.objects.filter(title=self.context['view'].kwargs.get('title_id'),
+                                     author=self.context['request'].user
             ).exists():
                 raise serializers.ValidationError(MORE_THAN_ONE_REVIEW)
         return data
