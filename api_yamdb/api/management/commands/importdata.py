@@ -2,8 +2,6 @@ from django.core.management.base import BaseCommand
 import csv
 import sqlite3
 
-from reviews.models import User, Category, Genre, Comment, GenreTitle, Review, Title
-
 
 class Command(BaseCommand):
     help = 'Добавление в базу данных тестовых данных'
@@ -50,7 +48,9 @@ class Command(BaseCommand):
                     for key, value in row.items():
                         if key in db['instane_field']:
                             key += '_id'
-                        clean[key] = value
+
+                        clean[key] = value.replace("'", "&qout")
+
                     try:
                         cursor.execute(
                             f"""INSERT INTO main.reviews_{db['db_name']}
