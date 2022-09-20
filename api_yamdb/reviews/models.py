@@ -1,5 +1,6 @@
 from django.db import models
-import random, string
+import random
+import string
 from django.contrib.auth.models import AbstractUser
 
 
@@ -27,7 +28,9 @@ class User(AbstractUser):
         ordering = ('username',)
 
     def generate_activation_code(self):
-        self.confirmation_code = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        self.confirmation_code = ''.join(random.choice(
+            string.ascii_uppercase + string.digits
+        ) for x in range(6))
 
 
 class Category(models.Model):
@@ -110,25 +113,25 @@ class GenreTitle(models.Model):
         Genre,
         on_delete=models.CASCADE,
         verbose_name='Жанр',
-        )
+    )
     title = models.ForeignKey(
-        Title, 
+        Title,
         on_delete=models.CASCADE,
         verbose_name='Произведение',
-        )
+    )
 
     def __str__(self):
         return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
-    MESSAGE_FORM = (
-        'Произведение: {}, '
-        'отзыв: {}, '
-        'автор отзыва: {}, '
-        'оценка: {}, '
-        'дата публикации отзыва: {}.'
-    )
+    # MESSAGE_FORM = (
+    #     'Произведение: {}, '
+    #     'отзыв: {}, '
+    #     'автор отзыва: {}, '
+    #     'оценка: {}, '
+    #     'дата публикации отзыва: {}.'
+    # )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -164,14 +167,14 @@ class Review(models.Model):
             ),
         ]
 
-    def __str__(self):
-        return self.MESSAGE_FORM.format(
-            self.title,
-            self.text,
-            self.author,
-            self.score,
-            self.pub_date
-        )
+    # def __str__(self):
+    #     return self.MESSAGE_FORM.format(
+    #         self.title,
+    #         self.text,
+    #         self.author,
+    #         self.score,
+    #         self.pub_date
+    #     )
 
 
 class Comments(models.Model):
@@ -179,18 +182,22 @@ class Comments(models.Model):
         Review,
         on_delete=models.CASCADE,
         related_name='comments'
-        )
-    text = models.TextField(max_length=500, blank=True)
+    )
+    text = models.TextField(max_length=500)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments'
-        )
+    )
     pub_date = models.DateTimeField(
         'Дата добавления',
         auto_now_add=True,
-        )
+    )
+
     class Meta:
         ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text

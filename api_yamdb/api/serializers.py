@@ -2,38 +2,31 @@ from .validators import NoMeUsername, ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
+from reviews.models import Category, Genre, Review, Title, Comment, User
 
-from .validators import ChekUserCode, NoMeUsername
-
-from reviews.models import Category, Comments, Genre, Review, Title, User
 
 MORE_THAN_ONE_REVIEW = ('Превышено допустимое количество отзывов. '
-                        'Разрешен один на одно произведение.'
-                        )
+                        'Разрешен один на одно произведение.')
 WRONG_CODE = 'Неправильный код!'
 WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    """
-    Создание нового пользователя
-    """
     class Meta:
         model = User
         fields = (
             'email',
             'username',
         )
-        validators = [NoMeUsername(fields=('username',),
-                                   message=WRONG_USERNAME
-                                   ),
-                      ]
+        validators = [
+            NoMeUsername(
+                fields=('username',),
+                message=WRONG_USERNAME
+            ),
+        ]
 
 
 class TokenSerializer(serializers.Serializer):
-    """
-    Проверка кода подтверждения по имени пользователя
-    """
     username = serializers.CharField(max_length=30)
     confirmation_code = serializers.CharField(max_length=6)
 
@@ -47,9 +40,6 @@ class TokenSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """
-    Работа Администратора с пользователями
-    """
     class Meta:
         model = User
         fields = (
@@ -60,25 +50,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(UserSerializer):
-    """
-    Работа с собственной учетной записью
-    """
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
-
-
-class CommentsSerializer(serializers.ModelSerializer):
-    """
-    Комментарии к отзывам
-    """
-    author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Comments
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -111,13 +84,15 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
-                                         slug_field='slug',
-                                         many=True
-                                         )
-    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
-                                            slug_field='slug'
-                                            )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
 
     class Meta:
         model = Title
@@ -140,8 +115,21 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
-            title = self.context['view'].kwargs.get('title_id')
-            author = self.context['request'].user
-            if Review.objects.filter(title=title, author=author).exists():
+            if Review.objects.filter(
+                title=self.context['view'].kwargs.get('title_id'),
+                author=self.context['request'].user
+            ).exists():
                 raise serializers.ValidationError(MORE_THAN_ONE_REVIEW)
         return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        model = Comment
+        read_only_fields = ('review',)
+        fields = '__all__'
