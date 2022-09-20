@@ -2,29 +2,23 @@ import json
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets, mixins, status
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework import filters, permissions, viewsets, mixins
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
-)
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework_simplejwt.tokens import RefreshToken
-
-
+    )
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
-from .permissions import (
-    IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly, IsAdmin
-    )
+from .permissions import IsAdminAuthorModeratorOrReadOnly, IsAdminOrReadOnly, IsAdmin
 from .serializers import (
-    CreateUserSerializer, CategorySerializer, 
-    GenreSerializer, MeSerializer,
-    ReviewSerializer, TitleWriteSerializer, 
-    TitleReadSerializer, TokenSerializer,
-    CommentSerializer, UserSerializer
-)
-from reviews.models import Category, Genre, Title, Review, User
+    CreateUserSerializer, CategorySerializer, GenreSerializer, MeSerializer,
+    ReviewSerializer, TitleWriteSerializer, TitleReadSerializer, TokenSerializer
+    )
+from django.core.mail import send_mail
+from rest_framework import status
+from rest_framework.response import Response
+from reviews.models import Category, Genre, Title, Comments, Review, User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -48,33 +42,29 @@ class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK,
+                        headers=headers
+                        )
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdmin])
 def token_view(request):
     serializer = TokenSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    user = User.objects.get(username=serializer.data['username'])
-    token = RefreshToken.for_user(user)
-    return Response(
-        json.loads(json.dumps({'token': str(token.access_token)})), 
-        status=status.HTTP_200_OK
-    )
-    
-    
+    if serializer.is_valid():
+        user = User.objects.get(username=serializer.data['username'])
+        token = RefreshToken.for_user(user)
+        dict = json.dumps({'token': str(token.access_token)})
+        return Response(json.loads(dict), status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
     queryset = User.objects.all()
+    pagination_class = LimitOffsetPagination
     lookup_field = 'username'
 
 
@@ -89,6 +79,24 @@ def me_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentsSerializer
+    permission_classes = (OwnerOrReadOnly,)
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        get_object_or_404(Review, review_id=review_id, )
+        new_queryset = Comments.objects.filter(review_id=review_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        post_id = self.kwargs.get("post")
+        get_object_or_404(Review, id=post_id)
+        serializer.save(author=self.request.user, post_id=post_id)
 
 
 class GenreCategoryViewSet(
@@ -128,12 +136,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (
         IsAuthenticatedOrReadOnly,
         IsAdminAuthorModeratorOrReadOnly
-    )
+        )
 
     def get_title(self):
-        return get_object_or_404(
-            Title, 
-            pk=self.kwargs.get('title_id'))
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         return self.get_title().reviews.all()
@@ -143,28 +149,3 @@ class ReviewViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             title=self.get_title()
         )
-        
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnly,
-        IsAdminAuthorModeratorOrReadOnly
-    )
-
-    def get_review(self):
-        return get_object_or_404(
-            Review,
-            pk=self.kwargs.get("review_id"),
-            title_id=self.kwargs.get("title_id"),
-        )
-
-    def get_queryset(self):
-        return self.get_review().comments.all()
-
-    def perform_create(self, serializer):
-        serializer.save(
-            author=self.request.user, 
-            review=self.get_review()
-        )
-        

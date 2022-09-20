@@ -1,10 +1,13 @@
-from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
 
 from reviews.models import User
 
 
 class NoMeUsername:
+    """
+    'me' - недопустимое имя пользователя
+    """
     def __init__(self, fields, message=None):
         self.fields = fields
         self.message = message
@@ -15,6 +18,9 @@ class NoMeUsername:
 
 
 class ChekUserCode:
+    """
+    Проверка правильности кода подтверждения из email
+    """
     def __init__(self, fields, message=None):
         self.fields = fields
         self.message = message
