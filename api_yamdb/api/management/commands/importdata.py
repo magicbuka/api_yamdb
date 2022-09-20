@@ -49,7 +49,7 @@ class Command(BaseCommand):
                         if key in db['instane_field']:
                             key += '_id'
 
-                        clean[key] = value.replace("'", "&qout")
+                        clean[key] = value.replace("'", "''")
 
                     try:
                         cursor.execute(
