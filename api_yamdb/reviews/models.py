@@ -32,6 +32,16 @@ class User(AbstractUser):
             string.ascii_uppercase + string.digits
         ) for x in range(6))
 
+    def is_admin(self):
+        return (
+            self.is_superuser
+            or self.is_staff
+            or (self.role == CHOICES[2][0])
+        )
+
+    def is_moderator(self):
+        return self.is_admin() or (self.role == CHOICES[1][0])
+
 
 class Category(models.Model):
     name = models.CharField(

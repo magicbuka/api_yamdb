@@ -1,8 +1,9 @@
-from .validators import NoMeUsername, ChekUserCode
+from .validators import ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
 from reviews.models import Category, Genre, Review, Title, Comment, User
+from rest_framework.exceptions import ValidationError
 
 
 MORE_THAN_ONE_REVIEW = (
@@ -13,29 +14,24 @@ WRONG_CODE = 'Неправильный код!'
 WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'username',
-        )
-        validators = [
-            NoMeUsername(
-                fields=('username',),
-                message=WRONG_USERNAME
-            ),
-        ]
+class CreateUserSerializer(serializers.Serializer):
+    email = serializers.CharField()
+    username = serializers.CharField()
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise ValidationError(WRONG_USERNAME, code='unique')
+        return value
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=30)
-    confirmation_code = serializers.CharField(max_length=6)
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
     class Meta:
         validators = [
             ChekUserCode(
-                fields=('username',),
+                fields=('username', 'confirmation_code'),
                 message=WRONG_CODE
             ),
         ]

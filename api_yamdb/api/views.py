@@ -55,10 +55,34 @@ class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def create_user_view(request):
+    serializer = CreateUserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user, created = User.objects.get_or_create(
+        username=serializer.data['username'],
+        email=serializer.data['email']
+    )
+    user.generate_activation_code()
+    user.save()
+    send_mail(
+        'Activate Your Account',
+        f'Here is the activation code: {user.confirmation_code}',
+        'admin@yamdb.fake',
+        [user.email]
+    )
+    headers = serializer.data
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK,
+        headers=headers
+    )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def token_view(request):
     serializer = TokenSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
     user = User.objects.get(username=serializer.data['username'])
     token = RefreshToken.for_user(user)
     return Response(
