@@ -4,6 +4,8 @@ import string
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from .mixins import UsernameMixins
+
 CHOICES = (
     ('user', 'user'),
     ('moderator', 'moderator'),
@@ -12,14 +14,26 @@ CHOICES = (
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=30, unique=True)
-    email = models.EmailField(unique=True)
-    role = models.CharField(max_length=10, choices=CHOICES, default='user')
-    bio = models.TextField(max_length=500, blank=True)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        #validators=[UsernameMixins.validate_username]
+    )
+    email = models.EmailField(max_length=254, unique=True)
+    role = models.CharField(
+        max_length=9,
+        choices=CHOICES,
+        default=CHOICES[0][0]
+    )
+    bio = models.TextField(blank=True)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
     is_superuser = models.BooleanField(default=False)
-    confirmation_code = models.CharField(max_length=6, blank=True)
+    confirmation_code = models.CharField(
+        max_length=6,
+        blank=True,
+        default=None
+    )
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

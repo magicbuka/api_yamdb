@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
 from reviews.models import Category, Genre, Review, Title, Comment, User
-from rest_framework.exceptions import ValidationError
+from reviews.mixins import UsernameMixins
 
 
 MORE_THAN_ONE_REVIEW = (
@@ -11,17 +11,11 @@ MORE_THAN_ONE_REVIEW = (
     'Разрешен один на одно произведение.'
 )
 WRONG_CODE = 'Неправильный код!'
-WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
 
-class CreateUserSerializer(serializers.Serializer):
-    email = serializers.CharField()
+class CreateUserSerializer(serializers.Serializer, UsernameMixins):
+    email = serializers.EmailField()
     username = serializers.CharField()
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise ValidationError(WRONG_USERNAME, code='unique')
-        return value
 
 
 class TokenSerializer(serializers.Serializer):
@@ -129,5 +123,5 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        read_only_fields = ('review',)
-        fields = '__all__'
+        read_only_fields = ('id', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date')
