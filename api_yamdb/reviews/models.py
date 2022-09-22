@@ -48,6 +48,10 @@ class User(AbstractUser):
     def is_moderator(self):
         return self.is_admin() or (self.role == CHOICES[1][0])
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
 
 class Category(models.Model):
     name = models.CharField(
