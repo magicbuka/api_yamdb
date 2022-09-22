@@ -9,7 +9,6 @@ def username_validator(value):
     username != 'me'
     username includes only letters, digits and @/./+/-/_
     """
-    print('ffff')
-    if value == 'me' or (not re.compile(r'^[\w.@+-]').match(value)):
+    if value == 'me' or not re.fullmatch(r'^[\w.@+-]+', value):
         raise ValidationError(WRONG_USERNAME, code='unique')
     return value
