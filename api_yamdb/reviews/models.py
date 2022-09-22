@@ -1,6 +1,3 @@
-import random
-import string
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -11,6 +8,7 @@ CHOICES = (
     ('moderator', 'moderator'),
     ('admin', 'admin'),
 )
+CODE_LENGTH = 6
 
 
 class User(AbstractUser):
@@ -21,7 +19,7 @@ class User(AbstractUser):
     )
     email = models.EmailField(max_length=254, unique=True)
     role = models.CharField(
-        max_length=9,
+        max_length=max([len(a[0]) for a in CHOICES]),
         choices=CHOICES,
         default=CHOICES[0][0]
     )
@@ -30,21 +28,15 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=150, blank=True)
     is_superuser = models.BooleanField(default=False)
     confirmation_code = models.CharField(
-        max_length=6,
+        max_length=CODE_LENGTH,
         blank=True,
         default=''
     )
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
 
     class Meta:
         ordering = ('username',)
-
-    def generate_activation_code(self):
-        self.confirmation_code = ''.join(random.choice(
-            string.ascii_uppercase + string.digits
-        ) for x in range(6))
 
     def is_admin(self):
         return (
@@ -202,12 +194,18 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    MESSAGE_FORM = (
+        'отзыв: {}, '
+        'текст: {}, '
+        'автор комментария: {}, '
+        'дата публикации комментария: {}.'
+    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField(max_length=500)
+    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -224,4 +222,9 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text
+        return self.MESSAGE_FORM.format(
+            self.review,
+            self.text[:75] + '..',
+            self.author,
+            self.pub_date
+        )

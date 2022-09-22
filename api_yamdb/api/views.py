@@ -1,4 +1,6 @@
 import json
+import random
+import string
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -25,10 +27,16 @@ from .serializers import (
     TitleReadSerializer, TokenSerializer,
     CommentSerializer, UserSerializer
 )
-from reviews.models import Category, Genre, Title, Review, User
+from reviews.models import Category, Genre, Title, Review, User, CODE_LENGTH
 
 WRONG_USERNAME_EMAIL = 'Некорректные поля!'
 WRONG_CODE = 'Неправильный код!'
+
+
+def generate_activation_code(user):
+    return ''.join(random.choice(
+        string.ascii_uppercase + string.digits
+    ) for x in range(CODE_LENGTH))
 
 
 @api_view(['POST'])
@@ -43,7 +51,7 @@ def create_user_view(request):
         )
     except IntegrityError:
         raise ValidationError(WRONG_USERNAME_EMAIL, code='unique')
-    user.generate_activation_code()
+    user.confirmation_code = generate_activation_code(user)
     user.save()
     send_mail(
         'Activate Your Account',
@@ -66,7 +74,7 @@ def token_view(request):
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(User, username=serializer.data['username'])
     if user.confirmation_code != serializer.data['confirmation_code']:
-        user.generate_activation_code()
+        user.confirmation_code = ''
         raise ValidationError(WRONG_CODE, code='unique')
     token = RefreshToken.for_user(user)
     return Response(
