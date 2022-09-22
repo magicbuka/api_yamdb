@@ -1,4 +1,3 @@
-from .validators import ChekUserCode
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Avg
 from rest_framework import serializers
@@ -10,7 +9,6 @@ MORE_THAN_ONE_REVIEW = (
     'Превышено допустимое количество отзывов. '
     'Разрешен один на одно произведение.'
 )
-WRONG_CODE = 'Неправильный код!'
 
 
 class CreateUserSerializer(serializers.Serializer, UsernameMixins):
@@ -18,20 +16,12 @@ class CreateUserSerializer(serializers.Serializer, UsernameMixins):
     username = serializers.CharField()
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(serializers.Serializer, UsernameMixins):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
 
-    class Meta:
-        validators = [
-            ChekUserCode(
-                fields=('username', 'confirmation_code'),
-                message=WRONG_CODE
-            ),
-        ]
 
-
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameMixins):
     class Meta:
         model = User
         fields = (
@@ -41,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
         optional_fields = ('first_name', 'last_name', 'bio', 'role')
 
 
-class MeSerializer(UserSerializer):
+class MeSerializer(UserSerializer, UsernameMixins):
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 

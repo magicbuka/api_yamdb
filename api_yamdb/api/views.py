@@ -1,7 +1,9 @@
 import json
+
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.utils import IntegrityError
 from rest_framework import filters, permissions, viewsets, mixins, status
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -9,6 +11,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import ValidationError
 
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyMixins
@@ -24,33 +27,8 @@ from .serializers import (
 )
 from reviews.models import Category, Genre, Title, Review, User
 
-
-class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    serializer_class = CreateUserSerializer
-    permission_classes = (AllowAny,)
-    http_method_names = ['post']
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.generate_activation_code()
-        user.save()
-        send_mail(
-            'Activate Your Account',
-            f'Here is the activation code: {user.confirmation_code}',
-            'admin@yamdb.fake',
-            [user.email]
-        )
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
+WRONG_USERNAME_EMAIL = 'Некорректные поля!'
+WRONG_CODE = 'Неправильный код!'
 
 
 @api_view(['POST'])
@@ -58,10 +36,13 @@ class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 def create_user_view(request):
     serializer = CreateUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user, created = User.objects.get_or_create(
-        username=serializer.data['username'],
-        email=serializer.data['email']
-    )
+    try:
+        user, created = User.objects.get_or_create(
+            username=serializer.data['username'],
+            email=serializer.data['email']
+        )
+    except IntegrityError:
+        raise ValidationError(WRONG_USERNAME_EMAIL, code='unique')
     user.generate_activation_code()
     user.save()
     send_mail(
@@ -83,7 +64,10 @@ def create_user_view(request):
 def token_view(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = User.objects.get(username=serializer.data['username'])
+    user = get_object_or_404(User, username=serializer.data['username'])
+    if user.confirmation_code != serializer.data['confirmation_code']:
+        user.generate_activation_code()
+        raise ValidationError(WRONG_CODE, code='unique')
     token = RefreshToken.for_user(user)
     return Response(
         json.loads(json.dumps({'token': str(token.access_token)})),

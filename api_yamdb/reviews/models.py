@@ -4,7 +4,7 @@ import string
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .mixins import UsernameMixins
+from .validators import username_validator
 
 CHOICES = (
     ('user', 'user'),
@@ -17,7 +17,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        #validators=[UsernameMixins.validate_username]
+        validators=[username_validator]
     )
     email = models.EmailField(max_length=254, unique=True)
     role = models.CharField(
@@ -32,7 +32,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         max_length=6,
         blank=True,
-        default=None
+        default=''
     )
 
     USERNAME_FIELD = 'username'
