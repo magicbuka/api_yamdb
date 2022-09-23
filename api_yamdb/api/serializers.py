@@ -48,20 +48,18 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(read_only=True, many=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.IntegerField()
 
     class Meta:
-        model = Title
-        fields = (
+        FIELDS = (
             'id', 'name', 'year', 'rating',
             'description', 'genre', 'category'
         )
-        read_only_fields = (
-            'id', 'name', 'genre', 'year',
-            'category', 'description', 'rating'
-        )
+        model = Title
+        fields = FIELDS
+        read_only_fields = FIELDS
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -121,5 +119,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        read_only_fields = ('id', 'author', 'pub_date')
         fields = ('id', 'text', 'author', 'pub_date')
