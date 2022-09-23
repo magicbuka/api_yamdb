@@ -97,8 +97,8 @@ def me_view(request):
             status=status.HTTP_200_OK
         )
     serializer = MeUserSerializer(
-        request.user, 
-        data=request.data, 
+        request.user,
+        data=request.data,
         partial=True
     )
     serializer.is_valid(raise_exception=True)
