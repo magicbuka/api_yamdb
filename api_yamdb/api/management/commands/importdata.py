@@ -40,6 +40,19 @@ class Command(BaseCommand):
                 'instane_field': ['title', 'author']
             },
         }
+        SQL_FORM = (
+            """INSERT INTO main.reviews_{}
+            ({}) VALUES
+            ('{}');"""
+        )
+        add_field = {
+            'password': '',
+            'is_staff': '0',
+            'is_active': '1',
+            'date_joined': '',
+            'is_superuser': '0',
+            'confirmation_code': ''
+        }
         for name, db in file_name_dict.items():
             with open(f'{path}/{name}.csv', encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -48,14 +61,16 @@ class Command(BaseCommand):
                     for key, value in row.items():
                         if key in db['instane_field']:
                             key += '_id'
-
                         clean[key] = value.replace("'", "''")
-
+                    if db['db_name'] == "user":
+                        clean.update(add_field)
                     try:
                         cursor.execute(
-                            f"""INSERT INTO main.reviews_{db['db_name']}
-                            ({', '.join(clean.keys())}) VALUES
-                            ('{"', '".join(clean.values())}');"""
+                            SQL_FORM.format(
+                                db['db_name'],
+                                ', '.join(clean.keys()),
+                                "', '".join(clean.values())
+                            )
                         )
                     except sqlite3.IntegrityError:
                         self.stdout.write('Запись уже существует!')

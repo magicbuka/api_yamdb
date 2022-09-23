@@ -1,6 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from reviews.mixins import UsernameMixins
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 from .validators import ChekUserCode, NoMeUsername
@@ -9,39 +10,19 @@ MORE_THAN_ONE_REVIEW = (
     'Превышено допустимое количество отзывов. '
     'Разрешен один на одно произведение.'
 )
-WRONG_CODE = 'Неправильный код!'
-WRONG_USERNAME = 'Недопустимое имя пользователя!'
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'username',
-        )
-        validators = [
-            NoMeUsername(
-                fields=('username',),
-                message=WRONG_USERNAME
-            ),
-        ]
+class CreateUserSerializer(serializers.Serializer, UsernameMixins):
+    email = serializers.EmailField()
+    username = serializers.CharField()
 
 
-class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=30)
-    confirmation_code = serializers.CharField(max_length=6)
-
-    class Meta:
-        validators = [
-            ChekUserCode(
-                fields=('username',),
-                message=WRONG_CODE
-            ),
-        ]
+class TokenSerializer(serializers.Serializer, UsernameMixins):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameMixins):
     class Meta:
         model = User
         fields = (
@@ -51,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         optional_fields = ('first_name', 'last_name', 'bio', 'role')
 
 
-class MeSerializer(UserSerializer):
+class MeSerializer(UserSerializer, UsernameMixins):
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
