@@ -1,4 +1,5 @@
 import os
+import string
 from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -100,3 +101,8 @@ AUTH_USER_MODEL = 'reviews.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+CONFIRMATION_CODE_SET = string.ascii_uppercase + string.digits
+CONFIRMATION_CODE_LENGTH = 6
+
+

@@ -1,4 +1,4 @@
-from .validators import username_validator
+from reviews.validators import username_validator
 
 
 class UsernameMixins:

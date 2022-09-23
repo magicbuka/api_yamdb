@@ -1,7 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.mixins import UsernameMixins
+from .mixins import UsernameMixins
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 MORE_THAN_ONE_REVIEW = (
@@ -10,14 +10,18 @@ MORE_THAN_ONE_REVIEW = (
 )
 
 
-class CreateUserSerializer(serializers.Serializer, UsernameMixins):
-    email = serializers.EmailField()
-    username = serializers.CharField()
+class GetOrCreateUserSerializer(serializers.Serializer, UsernameMixins):
+    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(max_length=150)
 
 
-class TokenSerializer(serializers.Serializer, UsernameMixins):
+class ConfCodeSerializer(serializers.Serializer, UsernameMixins):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
+
+
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField(read_only=True)
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameMixins):
@@ -30,7 +34,7 @@ class UserSerializer(serializers.ModelSerializer, UsernameMixins):
         optional_fields = ('first_name', 'last_name', 'bio', 'role')
 
 
-class MeSerializer(UserSerializer, UsernameMixins):
+class MeUserSerializer(UserSerializer, UsernameMixins):
     class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
@@ -48,9 +52,9 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(read_only=True, many=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.IntegerField()
 
     class Meta:
         model = Title
@@ -121,5 +125,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        read_only_fields = ('id', 'author', 'pub_date')
         fields = ('id', 'text', 'author', 'pub_date')
