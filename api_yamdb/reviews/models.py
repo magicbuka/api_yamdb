@@ -217,7 +217,6 @@ class Comment(ReviewComment):
         verbose_name='Комментарий',
     )
 
-
     class Meta(ReviewComment.Meta):
         default_related_name = 'comments'
         verbose_name = 'Комментарий'
