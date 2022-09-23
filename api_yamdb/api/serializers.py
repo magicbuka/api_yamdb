@@ -4,8 +4,6 @@ from rest_framework import serializers
 from reviews.mixins import UsernameMixins
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
-from .validators import ChekUserCode, NoMeUsername
-
 MORE_THAN_ONE_REVIEW = (
     'Превышено допустимое количество отзывов. '
     'Разрешен один на одно произведение.'
