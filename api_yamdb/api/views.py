@@ -2,6 +2,7 @@ import random
 
 from django.db.utils import IntegrityError
 from django.db.models.aggregates import Avg
+from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,8 +15,6 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
-from django.conf import settings
 from .filters import TitleFilter
 from .permissions import (
     IsAdminOrReadOnly, IsAdmin, IsAdminAuthorModeratorOrReadOnly
@@ -30,12 +29,8 @@ from .serializers import (
 )
 from reviews.models import Category, Genre, Review, Title, User
 
-
 WRONG_USERNAME_EMAIL = 'Некорректные поля: {}'
 WRONG_CODE = 'Неправильный код!'
-
-
-
 
 
 @api_view(['POST'])
