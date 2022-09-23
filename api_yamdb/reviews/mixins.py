@@ -6,4 +6,3 @@ class UsernameMixins:
 
     def validate_username(self, value):
         return username_validator(value)
-

@@ -1,6 +1,4 @@
 from datetime import datetime
-import random
-import string
 
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
