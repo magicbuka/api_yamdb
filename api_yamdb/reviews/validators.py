@@ -1,8 +1,14 @@
-from rest_framework.exceptions import ValidationError
+from datetime import datetime
 import re
+
+from rest_framework.exceptions import ValidationError
 
 WRONG_USERNAME = '"me" - недопустимое имя пользователя!'
 WRONG_SYMBOLS = 'Допустимы только буквы, цифры, "@", ".", "+", "-" и "_".'
+WRONG_YEAR = (
+    'Недопустимое значение поля "Год"! '
+    'Указанное значение: {} превышает значение текущего года: {}'
+)
 
 
 def username_validator(value):
@@ -15,3 +21,9 @@ def username_validator(value):
     if not re.fullmatch(r'^[\w.@+-]+', value):
         raise ValidationError(WRONG_SYMBOLS)
     return value
+
+
+def year_validator(value):
+    current_year = datetime.now().year
+    if value > current_year:
+        raise ValidationError(WRONG_YEAR.format(value, current_year))

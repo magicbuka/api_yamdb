@@ -1,11 +1,9 @@
-from datetime import datetime
-
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from django.conf import settings
-from .validators import username_validator
+from .validators import username_validator, year_validator
+
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -62,7 +60,7 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
 
-class CategoryGenreModel(models.Model):
+class CategoryGenre(models.Model):
     name = models.TextField(
         'Название',
         max_length=256
@@ -81,14 +79,14 @@ class CategoryGenreModel(models.Model):
         return f'Название - {self.name}'
 
 
-class Category(CategoryGenreModel):
-    class Meta:
+class Category(CategoryGenre):
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(CategoryGenreModel):
-    class Meta:
+class Genre(CategoryGenre):
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -106,10 +104,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год',
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(datetime.now().year)
-        ]
+        validators=[year_validator]
     )
     category = models.ForeignKey(
         Category,
@@ -150,7 +145,12 @@ class GenreTitle(models.Model):
         return f'{self.genre} {self.title}'
 
 
-class ReviewCommentModel(models.Model):
+class ReviewComment(models.Model):
+    MESSAGE_FORM = (
+        'Текст: {}, '
+        'автор: {}, '
+        'дата публикации отзыва: {}, '
+    )
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
         User,
@@ -166,14 +166,18 @@ class ReviewCommentModel(models.Model):
         abstract = True
         ordering = ('-pub_date',)
 
+    def __str__(self):
+        return self.MESSAGE_FORM.format(
+            self.text,
+            self.author,
+            self.pub_date
+        )
 
-class Review(ReviewCommentModel):
+
+class Review(ReviewComment):
     MESSAGE_FORM = (
-        'Произведение: {}, '
-        'отзыв: {:.15}, '
-        'автор отзыва: {}, '
-        'оценка: {}, '
-        'дата публикации отзыва: {}.'
+        'произведение: {}, '
+        'оценка: {}.'
     )
     title = models.ForeignKey(
         Title,
@@ -184,7 +188,7 @@ class Review(ReviewCommentModel):
         verbose_name='Оценка'
     )
 
-    class Meta:
+    class Meta(ReviewComment.Meta):
         default_related_name = 'reviews'
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -196,21 +200,18 @@ class Review(ReviewCommentModel):
         ]
 
     def __str__(self):
-        return self.MESSAGE_FORM.format(
-            self.title,
-            self.text,
-            self.author,
-            self.score,
-            self.pub_date
+        return (
+            super(Review, self).__str__()
+            + self.MESSAGE_FORM.format(
+                self.title,
+                self.score,
+            )
         )
 
 
-class Comment(ReviewCommentModel):
+class Comment(ReviewComment):
     MESSAGE_FORM = (
-        'Текст комментария: {:.15}, '
-        'автор: {}, '
-        'обзор: {:.15}, '
-        'дата публикации отзыва: {}.'
+        'обзор: {:.15}.'
     )
     review = models.ForeignKey(
         Review,
@@ -218,15 +219,16 @@ class Comment(ReviewCommentModel):
         verbose_name='Комментарий',
     )
 
-    class Meta(ReviewCommentModel.Meta):
+
+    class Meta(ReviewComment.Meta):
         default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.MESSAGE_FORM.format(
-            self.text,
-            self.author,
-            self.review,
-            self.pub_date
+        return (
+            super(Comment, self).__str__()
+            + self.MESSAGE_FORM.format(
+                self.review,
+            )
         )

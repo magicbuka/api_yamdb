@@ -126,12 +126,15 @@ class CategoryViewSet(GenreCategoryViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')
-    ).all().order_by('name')
+    queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+    def get_queryset(self):
+        return Title.objects.all().annotate(
+            rating=Avg('reviews__score'),
+        ).order_by('rating')
 
     def get_serializer_class(self):
         if self.request.method not in permissions.SAFE_METHODS:
