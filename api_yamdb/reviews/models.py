@@ -1,34 +1,45 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from .validators import username_validator, year_validator
 
+
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
 CHOICES = (
-    ('user', 'user'),
-    ('moderator', 'moderator'),
-    ('admin', 'admin'),
+    (USER, USER),
+    (MODERATOR, MODERATOR),
+    (ADMIN, ADMIN),
 )
-CODE_LENGTH = 6
+
 
 
 class User(AbstractUser):
     username = models.CharField(
+        'Имя пользователя',
         max_length=150,
         unique=True,
         validators=[username_validator]
     )
-    email = models.EmailField(max_length=254, unique=True)
-    role = models.CharField(
-        max_length=max([len(a[0]) for a in CHOICES]),
-        choices=CHOICES,
-        default=CHOICES[0][0]
+    email = models.EmailField(
+        'Электронная почта',
+        max_length=254,
+        unique=True
     )
-    bio = models.TextField(blank=True)
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
-    is_superuser = models.BooleanField(default=False)
+    role = models.CharField(
+        'Роль',
+        max_length=len(max(role[0] for role in CHOICES)),
+        choices=CHOICES,
+        default=USER
+    )
+    bio = models.TextField('О себе', blank=True)
+    first_name = models.CharField('Имя', max_length=150, blank=True)
+    last_name = models.CharField('Фамилия', max_length=150, blank=True)
     confirmation_code = models.CharField(
-        max_length=CODE_LENGTH,
+        'Код подтверждения',
+        max_length=settings.CONFIRMATION_CODE_LENGTH,
         blank=True,
         default=''
     )
@@ -39,14 +50,10 @@ class User(AbstractUser):
         ordering = ('username',)
 
     def is_admin(self):
-        return (
-            self.is_superuser
-            or self.is_staff
-            or (self.role == CHOICES[2][0])
-        )
+        return self.is_staff or self.role == ADMIN
 
     def is_moderator(self):
-        return self.is_admin() or (self.role == CHOICES[1][0])
+        return self.role == MODERATOR
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -211,6 +218,7 @@ class Comment(ReviewComment):
         on_delete=models.CASCADE,
         verbose_name='Комментарий',
     )
+
 
     class Meta(ReviewComment.Meta):
         default_related_name = 'comments'

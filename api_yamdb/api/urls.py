@@ -27,10 +27,12 @@ router_v1.register(
     basename='comments'
 )
 
-
-urlpatterns = [
+auth_v1 = [
     path('v1/auth/signup/', create_user_view, name='signup'),
     path('v1/auth/token/', token_view, name='token'),
+]
+urlpatterns = [
+    *auth_v1,
     path('v1/users/me/', me_view),
     path('v1/', include(router_v1.urls)),
 ]

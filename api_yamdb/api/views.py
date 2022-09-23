@@ -1,6 +1,4 @@
-import json
 import random
-import string
 
 from django.db.utils import IntegrityError
 from django.db.models.aggregates import Avg
@@ -17,72 +15,75 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
+from django.conf import settings
 from .filters import TitleFilter
 from .permissions import (
     IsAdminOrReadOnly, IsAdmin, IsAdminAuthorModeratorOrReadOnly
 )
 from .serializers import (
-    CreateUserSerializer, CategorySerializer,
-    GenreSerializer, MeSerializer,
+    GetOrCreateUserSerializer, CategorySerializer,
+    GenreSerializer, MeUserSerializer,
     ReviewSerializer, TitleWriteSerializer,
-    TitleReadSerializer, TokenSerializer,
-    CommentSerializer, UserSerializer
+    TitleReadSerializer, ConfCodeSerializer,
+    CommentSerializer, UserSerializer,
+    TokenSerializer
 )
-from reviews.models import Category, CODE_LENGTH, Genre, Review, Title, User
+from reviews.models import Category, Genre, Review, Title, User
 
 
-WRONG_USERNAME_EMAIL = 'Некорректные поля!'
+WRONG_USERNAME_EMAIL = 'Некорректные поля: {}'
 WRONG_CODE = 'Неправильный код!'
 
 
-def generate_activation_code(user):
-    return ''.join(random.choice(
-        string.ascii_uppercase + string.digits
-    ) for x in range(CODE_LENGTH))
+
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_user_view(request):
-    serializer = CreateUserSerializer(data=request.data)
+    serializer = GetOrCreateUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        user, created = User.objects.get_or_create(
+        user, _ = User.objects.get_or_create(
             username=serializer.data['username'],
             email=serializer.data['email']
         )
-    except IntegrityError:
-        raise ValidationError(WRONG_USERNAME_EMAIL, code='unique')
-    user.confirmation_code = generate_activation_code(user)
+    except IntegrityError as e:
+        raise ValidationError(WRONG_USERNAME_EMAIL.format(e))
+    user.confirmation_code = ''.join(
+        random.sample(
+            settings.CONFIRMATION_CODE_SET,
+            settings.CONFIRMATION_CODE_LENGTH
+        )
+    )
     user.save()
     send_mail(
-        'Activate Your Account',
-        f'Here is the activation code: {user.confirmation_code}',
+        'Активация аккаунта',
+        f'Ваш код активации: {user.confirmation_code}',
         'admin@yamdb.fake',
         [user.email]
     )
-    headers = serializer.data
     return Response(
         serializer.data,
         status=status.HTTP_200_OK,
-        headers=headers
+        headers=serializer.data
     )
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def token_view(request):
-    serializer = TokenSerializer(data=request.data)
+    serializer = ConfCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(User, username=serializer.data['username'])
-    if user.confirmation_code != serializer.data['confirmation_code']:
-        user.confirmation_code = ''
-        raise ValidationError(WRONG_CODE, code='unique')
+    code = user.confirmation_code
+    user.confirmation_code = ''
+    user.save()
+    if code != serializer.data['confirmation_code'] or code == '':
+        raise ValidationError(WRONG_CODE)
     token = RefreshToken.for_user(user)
-    return Response(
-        json.loads(json.dumps({'token': str(token.access_token)})),
-        status=status.HTTP_200_OK
-    )
+    serializer = TokenSerializer({'token': token})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -96,13 +97,14 @@ class UsersViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def me_view(request):
     if request.method == 'GET':
-        serializer = MeSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    serializer = MeSerializer(request.user, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            MeUserSerializer(request.user).data,
+            status=status.HTTP_200_OK
+        )
+    serializer = MeUserSerializer(request.user, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GenreCategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
