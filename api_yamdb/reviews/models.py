@@ -166,7 +166,7 @@ class ReviewCommentModel(models.Model):
 class Review(ReviewCommentModel):
     MESSAGE_FORM = (
         'Произведение: {}, '
-        'отзыв: {}, '
+        'отзыв: {:.15}, '
         'автор отзыва: {}, '
         'оценка: {}, '
         'дата публикации отзыва: {}.'
@@ -194,7 +194,7 @@ class Review(ReviewCommentModel):
     def __str__(self):
         return self.MESSAGE_FORM.format(
             self.title,
-            self.text{:.15},
+            self.text,
             self.author,
             self.score,
             self.pub_date
@@ -203,9 +203,9 @@ class Review(ReviewCommentModel):
 
 class Comment(ReviewCommentModel):
     MESSAGE_FORM = (
-        'Текст комментария: {}, '
+        'Текст комментария: {:.15}, '
         'автор: {}, '
-        'обзор: {}, '
+        'обзор: {:.15}, '
         'дата публикации отзыва: {}.'
     )
     review = models.ForeignKey(
@@ -221,8 +221,8 @@ class Comment(ReviewCommentModel):
 
     def __str__(self):
         return self.MESSAGE_FORM.format(
-            self.text{:.15},
+            self.text,
             self.author,
-            self.review{:.15},
+            self.review,
             self.pub_date
         )
