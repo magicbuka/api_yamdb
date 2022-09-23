@@ -4,7 +4,6 @@ from django.db import models
 
 from .validators import username_validator, year_validator
 
-
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -13,7 +12,6 @@ CHOICES = (
     (MODERATOR, MODERATOR),
     (ADMIN, ADMIN),
 )
-
 
 
 class User(AbstractUser):
