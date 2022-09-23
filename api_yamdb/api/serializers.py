@@ -1,9 +1,10 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Category, Genre, Review, Title, Comment, User
 from reviews.mixins import UsernameMixins
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
+from .validators import ChekUserCode, NoMeUsername
 
 MORE_THAN_ONE_REVIEW = (
     'Превышено допустимое количество отзывов. '
@@ -50,19 +51,19 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
-    category = CategorySerializer()
-    rating = serializers.SerializerMethodField('get_rating')
+    category = CategorySerializer(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'year', 'rating',
+            'description', 'genre', 'category'
+        )
         read_only_fields = (
             'id', 'name', 'genre', 'year',
             'category', 'description', 'rating'
         )
-
-    def get_rating(self, obj):
-        return obj.reviews.aggregate(Avg('score')).get('score__avg')
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -78,7 +79,10 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = (
+            'id', 'name', 'year',
+            'description', 'genre', 'category'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -92,16 +96,22 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        read_only_fields = ('title',)
-        fields = '__all__'
+        fields = (
+            'id', 'text', 'author',
+            'score', 'pub_date',
+        )
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            if Review.objects.filter(
-                title=self.context['view'].kwargs.get('title_id'),
-                author=self.context['request'].user
-            ).exists():
-                raise serializers.ValidationError(MORE_THAN_ONE_REVIEW)
+        if self.context['request'].method != 'POST':
+            return data
+        if Review.objects.filter(
+            title=get_object_or_404(
+                Title,
+                id=self.context['view'].kwargs.get('title_id')
+            ),
+            author=self.context['request'].user
+        ).exists():
+            raise serializers.ValidationError(MORE_THAN_ONE_REVIEW)
         return data
 
 

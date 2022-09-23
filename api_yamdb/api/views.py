@@ -2,21 +2,22 @@ import json
 import random
 import string
 
+from django.db.utils import IntegrityError
+from django.db.models.aggregates import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.utils import IntegrityError
-from rest_framework import filters, permissions, viewsets, mixins, status
+from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 )
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import ValidationError
+
 
 from .filters import TitleFilter
-from .mixins import ListCreateDestroyMixins
 from .permissions import (
     IsAdminOrReadOnly, IsAdmin, IsAdminAuthorModeratorOrReadOnly
 )
@@ -27,7 +28,8 @@ from .serializers import (
     TitleReadSerializer, TokenSerializer,
     CommentSerializer, UserSerializer
 )
-from reviews.models import Category, Genre, Title, Review, User, CODE_LENGTH
+from reviews.models import Category, CODE_LENGTH, Genre, Review, Title, User
+
 
 WRONG_USERNAME_EMAIL = 'Некорректные поля!'
 WRONG_CODE = 'Неправильный код!'
@@ -103,7 +105,8 @@ def me_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GenreCategoryViewSet(ListCreateDestroyMixins, viewsets.GenericViewSet):
+class GenreCategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
+                           mixins.DestroyModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -121,7 +124,9 @@ class CategoryViewSet(GenreCategoryViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all().order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
