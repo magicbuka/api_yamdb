@@ -1,8 +1,10 @@
 import json
+
+from django.db.models.aggregates import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets, mixins, status
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 )
@@ -11,7 +13,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
-from .mixins import ListCreateDestroyMixins
 from .permissions import (
     IsAdminOrReadOnly, IsAdmin, IsAdminAuthorModeratorOrReadOnly
 )
@@ -22,7 +23,7 @@ from .serializers import (
     TitleReadSerializer, TokenSerializer,
     CommentSerializer, UserSerializer
 )
-from reviews.models import Category, Genre, Title, Review, User
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class CreateUserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -87,7 +88,8 @@ def me_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GenreCategoryViewSet(ListCreateDestroyMixins, viewsets.GenericViewSet):
+class GenreCategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
+                           mixins.DestroyModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -105,7 +107,9 @@ class CategoryViewSet(GenreCategoryViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all().order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
