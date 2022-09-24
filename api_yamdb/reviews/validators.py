@@ -27,3 +27,4 @@ def year_validator(value):
     current_year = datetime.now().year
     if value > current_year:
         raise ValidationError(WRONG_YEAR.format(value, current_year))
+    return value
