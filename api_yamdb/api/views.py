@@ -72,7 +72,6 @@ def token_view(request):
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(User, username=serializer.data['username'])
     code = user.confirmation_code
-    #user.confirmation_code = ''
     user.save()
     if code != serializer.data['confirmation_code'] or code == '':
         raise ValidationError(WRONG_CODE)
