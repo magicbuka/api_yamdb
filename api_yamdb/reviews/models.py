@@ -17,13 +17,13 @@ CHOICES = (
 class User(AbstractUser):
     username = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=settings.USERNAME_MAX_LENGTH,
         unique=True,
         validators=[username_validator]
     )
     email = models.EmailField(
         'Электронная почта',
-        max_length=254,
+        max_length=settings.EMAIL_MAX_LENGTH,
         unique=True
     )
     role = models.CharField(

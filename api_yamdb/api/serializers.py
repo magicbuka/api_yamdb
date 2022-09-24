@@ -1,6 +1,8 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
+from django.conf import settings
 from .mixins import UsernameMixins
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -11,17 +13,15 @@ MORE_THAN_ONE_REVIEW = (
 
 
 class GetOrCreateUserSerializer(serializers.Serializer, UsernameMixins):
-    email = serializers.EmailField(max_length=254)
-    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=settings.EMAIL_MAX_LENGTH)
+    username = serializers.CharField(max_length=settings.USERNAME_MAX_LENGTH)
 
 
 class ConfCodeSerializer(serializers.Serializer, UsernameMixins):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
-
-
-class TokenSerializer(serializers.Serializer):
-    token = serializers.CharField(read_only=True)
+    username = serializers.CharField(max_length=settings.USERNAME_MAX_LENGTH)
+    confirmation_code = serializers.CharField(
+        max_length=settings.CONFIRMATION_CODE_LENGTH
+    )
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameMixins):

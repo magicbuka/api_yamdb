@@ -14,6 +14,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.http import JsonResponse
 
 from .filters import TitleFilter
 from .permissions import (
@@ -24,8 +25,7 @@ from .serializers import (
     GenreSerializer, MeUserSerializer,
     ReviewSerializer, TitleWriteSerializer,
     TitleReadSerializer, ConfCodeSerializer,
-    CommentSerializer, UserSerializer,
-    TokenSerializer
+    CommentSerializer, UserSerializer
 )
 from reviews.models import Category, Genre, Review, Title, User
 
@@ -55,7 +55,7 @@ def create_user_view(request):
     send_mail(
         'Активация аккаунта',
         f'Ваш код активации: {user.confirmation_code}',
-        'admin@yamdb.fake',
+        settings.FROM_EMAIL,
         [user.email]
     )
     return Response(
@@ -72,13 +72,12 @@ def token_view(request):
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(User, username=serializer.data['username'])
     code = user.confirmation_code
-    user.confirmation_code = ''
+    #user.confirmation_code = ''
     user.save()
     if code != serializer.data['confirmation_code'] or code == '':
         raise ValidationError(WRONG_CODE)
     token = RefreshToken.for_user(user)
-    serializer = TokenSerializer({'token': token})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return JsonResponse({"token": str(token)}, status=status.HTTP_200_OK)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
